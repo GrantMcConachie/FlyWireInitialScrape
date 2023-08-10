@@ -111,10 +111,6 @@ class Data:
         """
         Lists all of the downstream regions that are in list neurons.
 
-        Input:
-            file_loc :list: - list of integers of neuron 'root_id's you want 
-                                  to know the connections of.
-
         Output:
             downstream_regions :list: - list of downstream regions.
         """
@@ -139,10 +135,7 @@ class Data:
 
     def load_json(self):
         """
-        Loads in the json file as a  dict
-
-        Input:
-            file_loc :str: - location of the json file that you want to 
+        Loads in the json file as a  dict 
         """
         f = open(self.file_loc)
         data = json.load(f)
@@ -206,7 +199,7 @@ class GraphData:
 if __name__ == '__main__':
 
     # Query Data and save to json
-    unpacked_data = Data()
+    # unpacked_data = Data()
     regions = ['ALPN', 'ALLN', 'CSD', 'olfactory', 'ALIN', 'ALON', 'DN']
     # for region in regions:
     #     list_neurons = unpacked_data.olfactory_neruons(region)
