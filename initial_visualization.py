@@ -157,67 +157,133 @@ class GraphData:
     """
     Methods for visualizing JSON formated data
     """
-    def connectivity_matrix_single_area(self, file_loc):
+    def connectivity_matrix(self, data_frames, upstream_axis=0):
+        """
+        Creates connectivity matricies
+
+        Input:
+            `data_frames` :list of dataframes: - 2D list with both areas you want 
+            to create a connectivity matrix of. If you want a self connectivity 
+            matrix, pass in the same dataframe twice
+
+            `upstream_axis` :int: - which region you want to be upstream
+
+        Output:
+            matricies :list: - list of connectivity matricies
+        """
+        # Catching if more than 2 dataframes are given
+        if len(data_frames) != 2:
+            raise ValueError(f"data_frames must contain 2 entries. You put {len(data_frames)}")
+        
+        # Creating a list of neurons
+        list_loc2_neurons = list(data_frames[1-upstream_axis].keys())
+
+        # Creating a connectivity matrix
+        connect_matrix = np.zeros((
+            len(data_frames[upstream_axis]), 
+            len(data_frames[1-upstream_axis])
+        ))
+        
+        # Looping through the first 
+        for i, (key, value) in enumerate(data_frames[upstream_axis].items()):
+            for j, downstream in enumerate(value["downstream"]):
+                # Checking if neurons are in the olfactory system
+                if str(downstream) not in list_loc2_neurons:
+                    pass
+                else:
+                    idx_downstream = list_loc2_neurons.index(str(downstream))
+                    connect_matrix[i][idx_downstream] = value["strength"][j]
+
+        return connect_matrix
+
+
+    def visualize_single_area(self, parent_dir, loc):
         """
         Creates a connectivity matrix for all the neurons in the file specified
 
         Input:
             file_loc :str: - location of the json file that you want to 
         """
-        # Load in json dict
-        data = Data(exist_file='y', file_loc=file_loc).load_json()
+        file_path = parent_dir + loc + "_connections.json"
 
-        # create a numpy matrix of connectivity        
-        connect_matrix = np.zeros((len(data), len(data)))
-
-        # creating connection matrix
-        count = 0
-        for i, (key, value) in enumerate(data.items()):
-            for j, downstream in enumerate(value["downstream"]):
-                # Checking if neurons are in the olfactory system
-                if str(downstream) not in data.keys():
-                    pass
-                else:
-                    idx_downstream = list(data.keys()).index(str(downstream))
-                    connect_matrix[i][idx_downstream] = value["strength"][j]
+        # Load in json dict and creating lists of neurons
+        data = Data(exist_file='y', file_loc=file_path).load_json()
+        connect_matrix = self.connectivity_matrix([data, data])
 
         # Normalizing the graph
         connect_matrix = connect_matrix / connect_matrix.max()
 
         # Plotting
         plt.imshow(connect_matrix, cmap="Greys", interpolation='none')
-        plt.title("Within area connection matrix")
-        plt.ylabel("Downstream Neuron")
-        plt.xlabel("Upstream Neuron")
+        plt.title("Within area connection matrix: " + loc)
+        plt.ylabel("Upstream Neuron")
+        plt.xlabel("Downstream Neuron")
         plt.colorbar()
         plt.show()
 
-    def connectivity_matrix_multiple_areas(self): #TODO
-        pass
+    def connectivity_matrix_multiple_areas(self, file_loc, loc_1, loc_2): #TODO
+        """
+        Creates a connectivity matric between two areas
+
+        Input:
+            loc_1 :str: - 1st location
+            loc_2 :str: - 2nd location
+        """
+        # Load in both JSON dicts and create connectivity matrix
+        loc_1_data = Data(exist_file='y', file_loc=file_loc+loc_1+"_connections.json").load_json()
+        loc_2_data = Data(exist_file='y', file_loc=file_loc+loc_2+"_connections.json").load_json()
+        connect_matrix_1 = self.connectivity_matrix([loc_1_data, loc_2_data], upstream_axis=0)
+        connect_matrix_2 = self.connectivity_matrix([loc_1_data, loc_2_data], upstream_axis=1)
+
+        # Normalizing the graph
+        connect_matrix_1 = connect_matrix_1 / connect_matrix_1.max()
+        connect_matrix_2 = connect_matrix_2 / connect_matrix_2.max()
+
+        # Plotting
+        fig, ax = plt.subplots(1,2, layout="constrained")
+        plt_1 = ax[0].imshow(connect_matrix_1, cmap="binary", interpolation='none')
+        ax[0].set_title(f"{loc_1} --> {loc_2}")
+        ax[0].set_ylabel(f"{loc_1}")
+        ax[0].set_xlabel(f"{loc_2}")
+
+        plt_2 = ax[1].imshow(connect_matrix_2, cmap="binary", interpolation='none')
+        ax[1].set_title(f"{loc_2} --> {loc_1}")
+        ax[1].set_ylabel(f"{loc_2}")
+        ax[1].set_xlabel(f"{loc_1}")       
+
+        fig.colorbar(plt_1)
+        fig.colorbar(plt_2)
+        plt.show()
+
 
 
 if __name__ == '__main__':
 
     # Query Data and save to json
-    # unpacked_data = Data()
-    regions = ['ALPN', 'ALLN', 'CSD', 'olfactory', 'ALIN', 'ALON', 'DN']
-    # for region in regions:
-    #     list_neurons = unpacked_data.olfactory_neruons(region)
-    #     unpacked_data.neuron_connections(
-    #         list_neurons=list_neurons, 
-    #         save='y', 
-    #         name=region+"_connections"
-    #     )
-
-    # List downstream connects
+    unpacked_data = Data()
+    regions = ['Kenyon_Cell']
     for region in regions:
-        json_data = Data(exist_file='y', file_loc="./"+region+"_connections.json")
-        downstream = json_data.list_down_stream_regions()
-        num_neurons = len(json_data.olfactory_neruons(region))
-        print(region, "downstream regions:", downstream)
-        print("Number neurons in", region, ":", num_neurons, "\n")
+        list_neurons = unpacked_data.olfactory_neruons(region)
+        unpacked_data.neuron_connections(
+            list_neurons=list_neurons, 
+            save='y', 
+            name=region+"_connections"
+        )
 
-    # Graphing data
-    connection_dict_loc = "./olfactory_connections.json"
-    GraphData().connectivity_matrix_single_area(file_loc=connection_dict_loc)
+    # # List downstream connects
+    # for region in regions:
+        # json_data = Data(exist_file='y', file_loc="./"+region+"_connections.json")
+        # downstream = json_data.list_down_stream_regions()
+        # num_neurons = len(json_data.olfactory_neruons(region))
+        # print(region, "downstream regions:", downstream)
+        # print("Number neurons in", region, ":", num_neurons, "\n")
+
+    json_data = Data(exist_file='y', file_loc="./ALPN_connections.json")
+    downstream = json_data.list_down_stream_regions()
+    num_neurons = len(json_data.olfactory_neruons("ALPN"))
+    print("ALPN downstream regions:", downstream)
+
+    # # Graphing data
+    # GraphData().visualize_single_area(parent_dir="./", loc="olfactory")
+    # GraphData().connectivity_matrix_multiple_areas(file_loc="./", loc_1="olfactory", loc_2="ALLN")
  
