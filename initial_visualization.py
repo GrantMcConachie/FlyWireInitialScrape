@@ -3,7 +3,7 @@ This is an initial visualization of the FlyWire data connectome data for the olf
 system. 
 
 Files used in this script can be downloaded at https://codex.flywire.ai/api/download. 
-Files used are the 'classification' csv file and the 'Connections' file. For a successful 
+Files used are the 'Classification' csv file and the 'Connections' file. For a successful 
 run, download these two datasets, put them in a folder called 'Data' and unzip them. 
 Run this script in the parent folder.
 
