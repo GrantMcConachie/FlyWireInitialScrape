@@ -33,9 +33,11 @@ class Data:
         Creating dataframes of each of the csv files
 
         Inputs:
-            connection_file_loc :string: - location of 'connection.csv'
-            classification_file_loc :string: - location of 'classification.csv'
-            exist_file :char: - 'n' if there is no existing json file
+            `connection_file_loc` :string: - location of 'connection.csv'
+
+            `classification_file_loc` :string: - location of 'classification.csv'
+
+            `exist_file` :char: - 'n' if there is no existing json file
         """
         self.connection_df = pd.read_csv(connection_file_loc)
         self.classification_df = pd.read_csv(classification_file_loc)
@@ -48,11 +50,11 @@ class Data:
         certain class
 
         Input:
-            _class :string: - class you want to query
+            `_class` :string: - class you want to query
 
         Output:
-            list_olf_neurons :list: - list of 'root_id's of the neruons in the class
-                                      '_class'
+            `list_olf_neurons` :list: - list of 'root_id's of the neruons in the
+            class '_class'
         """
         list_neurons = []
 
@@ -68,15 +70,17 @@ class Data:
         list that you input
 
         Input:
-            list_neurons :list: - list of integers of neuron 'root_id's you want 
-                                  to know the connections of.
-            save_data :char: - y saves data to the pwd 
-            name :str: - name of the json file you're saving
+            `list_neurons` :list: - list of integers of neuron 'root_id's you want 
+            to know the connections of.
+
+            `save_data` :char: - y saves data to the pwd 
+
+            `name` :str: - name of the json file you're saving
 
         Output:
-            neuron_connection :dict: - neurons and their lists of connecting 
-                                       neurons and how strong their connections 
-                                       are and what type of connections they have
+            `neuron_connection` :dict: - neurons and their lists of connecting 
+            neurons and how strong their connections are and what type of 
+            connections they have
         """
         # Initializing a dictionary with all of the neurons in 'list_neurons'
         neuron_connection = {}
@@ -112,7 +116,7 @@ class Data:
         Lists all of the downstream regions that are in list neurons.
 
         Output:
-            downstream_regions :list: - list of downstream regions.
+            `downstream_regions` :list: - list of downstream regions.
         """
         # Load important variables
         downstream_regions = []
@@ -147,8 +151,9 @@ class Data:
         saves the data that you input to a json file in pwd
 
         Input:
-            data :dict: - data you want to be saved
-            name :str: - title of the dataset
+            `data` :dict: - data you want to be saved
+
+            `name` :str: - title of the dataset
         """
         with open(name + ".json", "w") as f:
             json.dump(data, f)
@@ -169,7 +174,7 @@ class GraphData:
             `upstream_axis` :int: - which region you want to be upstream
 
         Output:
-            matricies :list: - list of connectivity matricies
+            `matricies` :list: - list of connectivity matricies
         """
         # Catching if more than 2 dataframes are given
         if len(data_frames) != 2:
@@ -197,12 +202,16 @@ class GraphData:
         return connect_matrix
 
 
-    def visualize_single_area(self, parent_dir, loc):
+    def visualize_single_area(self, parent_dir, loc, normalize=True):
         """
         Creates a connectivity matrix for all the neurons in the file specified
 
         Input:
-            file_loc :str: - location of the json file that you want to 
+            `parent_dir` :str: - parent directory of JSON files
+
+            `loc` :str: - class you want to visualize
+
+            `normalize` :bool: - Normalizes the connectivity matrix to 1
         """
         file_path = parent_dir + loc + "_connections.json"
 
@@ -211,7 +220,8 @@ class GraphData:
         connect_matrix = self.connectivity_matrix([data, data])
 
         # Normalizing the graph
-        connect_matrix = connect_matrix / connect_matrix.max()
+        if normalize:
+            connect_matrix = connect_matrix / connect_matrix.max()
 
         # Plotting
         plt.imshow(connect_matrix, cmap="Greys", interpolation='none')
@@ -221,13 +231,18 @@ class GraphData:
         plt.colorbar()
         plt.show()
 
-    def connectivity_matrix_multiple_areas(self, file_loc, loc_1, loc_2): #TODO
+    def connectivity_matrix_multiple_areas(self, file_loc, loc_1, loc_2, normalize=True):
         """
         Creates a connectivity matric between two areas
 
         Input:
-            loc_1 :str: - 1st location
-            loc_2 :str: - 2nd location
+            `file_loc` :str: - parent directory of JSON files
+
+            `loc_1` :str: - 1st location
+
+            `loc_2` :str: - 2nd location
+            
+            `normalize` :bool: - Normalizes the connectivity matrix to 1
         """
         # Load in both JSON dicts and create connectivity matrix
         loc_1_data = Data(exist_file='y', file_loc=file_loc+loc_1+"_connections.json").load_json()
@@ -236,8 +251,9 @@ class GraphData:
         connect_matrix_2 = self.connectivity_matrix([loc_1_data, loc_2_data], upstream_axis=1)
 
         # Normalizing the graph
-        connect_matrix_1 = connect_matrix_1 / connect_matrix_1.max()
-        connect_matrix_2 = connect_matrix_2 / connect_matrix_2.max()
+        if normalize:
+            connect_matrix_1 = connect_matrix_1 / connect_matrix_1.max()
+            connect_matrix_2 = connect_matrix_2 / connect_matrix_2.max()
 
         # Plotting
         fig, ax = plt.subplots(1,2, layout="constrained")
@@ -261,14 +277,14 @@ if __name__ == '__main__':
 
     # Query Data and save to json
     unpacked_data = Data()
-    regions = ['Kenyon_Cell']
-    for region in regions:
-        list_neurons = unpacked_data.olfactory_neruons(region)
-        unpacked_data.neuron_connections(
-            list_neurons=list_neurons, 
-            save='y', 
-            name=region+"_connections"
-        )
+    regions = ['olfactory', 'ALPN', 'LHLN', 'LHCENT']
+    # for region in regions:
+    #     list_neurons = unpacked_data.olfactory_neruons(region)
+    #     unpacked_data.neuron_connections(
+    #         list_neurons=list_neurons, 
+    #         save='y', 
+    #         name=region+"_connections"
+    #     )
 
     # # List downstream connects
     # for region in regions:
@@ -278,12 +294,12 @@ if __name__ == '__main__':
         # print(region, "downstream regions:", downstream)
         # print("Number neurons in", region, ":", num_neurons, "\n")
 
-    json_data = Data(exist_file='y', file_loc="./ALPN_connections.json")
-    downstream = json_data.list_down_stream_regions()
-    num_neurons = len(json_data.olfactory_neruons("ALPN"))
-    print("ALPN downstream regions:", downstream)
+    # json_data = Data(exist_file='y', file_loc="./ALPN_connections.json")
+    # downstream = json_data.list_down_stream_regions()
+    # num_neurons = len(json_data.olfactory_neruons("ALPN"))
+    # print("ALPN downstream regions:", downstream)
 
     # # Graphing data
     # GraphData().visualize_single_area(parent_dir="./", loc="olfactory")
-    # GraphData().connectivity_matrix_multiple_areas(file_loc="./", loc_1="olfactory", loc_2="ALLN")
+    GraphData().connectivity_matrix_multiple_areas(file_loc="./", loc_1="ALPN", loc_2="LHCENT", normalize=False)
  
