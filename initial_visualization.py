@@ -67,7 +67,7 @@ class Data:
     def neuron_connections(self, list_neurons, save='y', name="olfactory_connectome"):
         """
         Find all of the connections in 'connections.csv' that are connected to a
-        list that you input
+        list that you input #TODO: threshold for >5 connections (in paper)
 
         Input:
             `list_neurons` :list: - list of integers of neuron 'root_id's you want 
@@ -158,11 +158,31 @@ class Data:
         with open(name + ".json", "w") as f:
             json.dump(data, f)
 
+    def list_hemibrain_type(): #TODO
+        """
+        Lists the hemibrain type of all the neurons in a certain class. For 
+        'olfactory' class, this will tell you which glomerulus each neuron 
+        projects to.
+        """
+        pass
+
+    def list_superclass(): #TODO
+        """
+        Lists the superclass of all the neurons in a certain class.
+        """
+        pass
+
+    def list_community_label(): #TODO maybe make these 3 functions part of the JSON download method. 
+        """
+        Lists the community label of all neurons in a certain class
+        """
+        pass
+
 class GraphData:
     """
     Methods for visualizing JSON formated data
     """
-    def connectivity_matrix(self, data_frames, upstream_axis=0):
+    def connectivity_matrix(self, data_frames, upstream_axis=0, binary=False):
         """
         Creates connectivity matricies
 
@@ -172,6 +192,9 @@ class GraphData:
             matrix, pass in the same dataframe twice
 
             `upstream_axis` :int: - which region you want to be upstream
+
+            `binary` :bool: - If true, return just connections in the form of 1 or 
+            0, no connection weights.
 
         Output:
             `matricies` :list: - list of connectivity matricies
@@ -197,7 +220,10 @@ class GraphData:
                     pass
                 else:
                     idx_downstream = list_loc2_neurons.index(str(downstream))
-                    connect_matrix[i][idx_downstream] = value["strength"][j]
+                    if binary:
+                        connect_matrix[i][idx_downstream] = 1
+                    else:
+                        connect_matrix[i][idx_downstream] = value["strength"][j]
 
         return connect_matrix
 
@@ -294,12 +320,12 @@ if __name__ == '__main__':
         # print(region, "downstream regions:", downstream)
         # print("Number neurons in", region, ":", num_neurons, "\n")
 
-    # json_data = Data(exist_file='y', file_loc="./ALPN_connections.json")
+    json_data = Data(exist_file='y', file_loc="./olfactory_connections.json")
     # downstream = json_data.list_down_stream_regions()
     # num_neurons = len(json_data.olfactory_neruons("ALPN"))
     # print("ALPN downstream regions:", downstream)
 
     # # Graphing data
     # GraphData().visualize_single_area(parent_dir="./", loc="olfactory")
-    GraphData().connectivity_matrix_multiple_areas(file_loc="./", loc_1="ALPN", loc_2="LHCENT", normalize=False)
+    GraphData().connectivity_matrix_multiple_areas(file_loc="./", loc_1="olfactory", loc_2="ALLN", normalize=False)
  
